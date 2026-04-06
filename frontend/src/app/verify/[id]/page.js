@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -49,7 +49,7 @@ export default function VerifyBatchPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    const fetchData = async (id) => {
+    const fetchData = useCallback(async (id) => {
         try {
             setLoading(true);
             const graphqlUrl = process.env.NEXT_PUBLIC_GRAPHQL_URL;
@@ -80,13 +80,13 @@ export default function VerifyBatchPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [t]);
 
     useEffect(() => {
         if (params.id) {
             fetchData(params.id);
         }
-    }, [params.id, t]);
+    }, [params.id, fetchData]);
 
     if (loading) return (
         <div className="min-h-screen bg-stone-50 flex items-center justify-center">
