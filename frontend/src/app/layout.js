@@ -1,17 +1,17 @@
-import { Inter, Outfit } from "next/font/google";
+import { Montserrat, Playfair_Display } from "next/font/google";
 import "leaflet/dist/leaflet.css";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ToastProvider } from "@/components/ui/Toast";
 import I18nProvider from "@/components/common/I18nProvider";
 
-const inter = Inter({
+const montserrat = Montserrat({
   subsets: ["latin"],
   variable: "--font-body",
   display: "swap",
 });
 
-const outfit = Outfit({
+const playfairDisplay = Playfair_Display({
   subsets: ["latin"],
   variable: "--font-display",
   display: "swap",
@@ -30,7 +30,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${inter.variable} ${outfit.variable}`}>
+    <html lang="en" className={`${montserrat.variable} ${playfairDisplay.variable}`}>
       <body className="antialiased font-sans">
         <I18nProvider>
           <AuthProvider>

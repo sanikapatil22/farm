@@ -202,22 +202,22 @@ export default function FarmerDashboard() {
       <div className="space-y-8">
         {/* Welcome Section */}
         <motion.div
-          className="relative overflow-hidden bg-[#022c22] rounded-3xl p-8 md:p-10 text-white shadow-2xl shadow-emerald-900/20"
+          className="relative overflow-hidden bg-[var(--color-kombu-green)] rounded-3xl p-8 md:p-10 text-[var(--color-tan)] shadow-lg border border-white/10"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3" />
+          <div className="absolute top-0 right-0 w-96 h-96 bg-[var(--color-tan)]/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-[var(--color-moss-green)]/12 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3" />
 
           <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold mb-3 tracking-tight">
+              <h1 className="text-3xl md:text-4xl font-bold mb-3 tracking-tight text-[#e6dbc4]">
                 {getGreeting()}, {getFirstName(user?.name)}! 👋
               </h1>
-              <p className="text-emerald-100/80 text-lg max-w-xl">
+              <p className="text-[var(--color-tan)]/90 text-lg max-w-xl">
                 {batches.length > 0 ? (
-                  <>You have <span className="text-white font-bold">{batches.length} batches</span> and <span className="text-white font-bold">{activeProducts} active products</span>.</>
+                  <>You have <span className="text-[var(--color-tan)] font-bold">{batches.length} batches</span> and <span className="text-[var(--color-tan)] font-bold">{activeProducts} active products</span>.</>
                 ) : (
                   <>Get started by creating your first batch to track your farm production.</>
                 )}
@@ -226,7 +226,7 @@ export default function FarmerDashboard() {
             <div className="flex gap-3">
               <motion.button
                 onClick={() => setIsCreateBatchOpen(true)}
-                className={`px-6 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl font-bold shadow-lg shadow-emerald-500/30 transition-all flex items-center gap-2 ${loadingFarm ? 'opacity-70 cursor-wait' : ''}`}
+                className={`px-6 py-3.5 bg-[var(--color-kombu-green)] hover:bg-[var(--color-moss-green)] text-[var(--color-bone)] rounded-xl font-bold shadow-lg shadow-black/10 transition-all flex items-center gap-2 ${loadingFarm ? 'opacity-70 cursor-wait' : ''}`}
                 whileHover={{ scale: loadingFarm ? 1 : 1.05 }}
                 whileTap={{ scale: loadingFarm ? 1 : 0.95 }}
                 disabled={loadingFarm}
@@ -277,10 +277,10 @@ export default function FarmerDashboard() {
         </div>
 
         {/* Main Content Area */}
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-4 gap-8 items-start">
           {/* Recent Batches */}
           <motion.div
-            className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden"
+            className="lg:col-span-3 self-start bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3, duration: 0.5 }}
@@ -301,28 +301,28 @@ export default function FarmerDashboard() {
                 {t("view_all")}
               </button>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-hidden">
               {loadingData ? (
                 <div className="flex justify-center items-center py-16">
                   <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
                 </div>
               ) : recentBatches.length > 0 ? (
-                <table className="w-full">
+                <table className="w-full table-fixed">
                   <thead className="bg-slate-50/50">
                     <tr>
-                      <th className="px-8 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                         Batch ID
                       </th>
-                      <th className="px-8 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                         Product
                       </th>
-                      <th className="px-8 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                         Variety
                       </th>
-                      <th className="px-8 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-8 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                         Sowing Date
                       </th>
                     </tr>
@@ -339,22 +339,22 @@ export default function FarmerDashboard() {
                           animate={{ opacity: 1 }}
                           transition={{ delay: 0.4 + index * 0.05 }}
                         >
-                          <td className="px-8 py-4 whitespace-nowrap">
+                          <td className="px-6 py-4 whitespace-nowrap">
                             <span className="font-mono text-sm font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">
                               {batch.id}
                             </span>
                           </td>
-                          <td className="px-8 py-4 whitespace-nowrap">
+                          <td className="px-6 py-4 whitespace-nowrap">
                             <span className="text-sm font-medium text-slate-900">
                               {batch.product}
                             </span>
                           </td>
-                          <td className="px-8 py-4 whitespace-nowrap">
+                          <td className="px-6 py-4 whitespace-nowrap">
                             <span className="text-sm text-slate-500">
                               {batch.variety || '-'}
                             </span>
                           </td>
-                          <td className="px-8 py-4 whitespace-nowrap">
+                          <td className="px-6 py-4 whitespace-nowrap">
                             <span
                               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${statusColors.bg} ${statusColors.text}`}
                             >
@@ -362,7 +362,7 @@ export default function FarmerDashboard() {
                               {batch.status}
                             </span>
                           </td>
-                          <td className="px-8 py-4 whitespace-nowrap">
+                          <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-2 text-sm text-slate-500">
                               <Clock className="w-4 h-4" />
                               {batch.date}
@@ -380,7 +380,7 @@ export default function FarmerDashboard() {
                   <p className="text-slate-400 text-sm mt-1">Create your first batch to get started</p>
                   <button
                     onClick={() => setIsCreateBatchOpen(true)}
-                    className="mt-4 px-4 py-2 bg-emerald-500 text-white rounded-lg font-medium text-sm hover:bg-emerald-600 transition"
+                    className="mt-4 px-4 py-2 bg-[var(--color-kombu-green)] text-[var(--color-bone)] rounded-lg font-medium text-sm hover:bg-[var(--color-moss-green)] transition"
                   >
                     Create Batch
                   </button>
@@ -390,7 +390,7 @@ export default function FarmerDashboard() {
           </motion.div>
 
           {/* Recent Activity */}
-          <div className="space-y-6">
+          <div className="space-y-6 self-start">
             <motion.div
               className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 md:p-8"
               initial={{ opacity: 0, x: 20 }}

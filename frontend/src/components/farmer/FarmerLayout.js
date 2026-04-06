@@ -62,7 +62,7 @@ export default function FarmerLayout({ children }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+    <div className="min-h-screen bg-[var(--color-bone)] font-sans text-[var(--color-cafe-noir)]">
       {/* Mobile Sidebar Overlay */}
       <AnimatePresence>
         {sidebarOpen && (
@@ -78,7 +78,7 @@ export default function FarmerLayout({ children }) {
 
       {/* Sidebar */}
       <motion.aside
-        className={`fixed top-0 left-0 h-full w-72 bg-[#022c22] text-white z-50 shadow-2xl transform transition-transform lg:translate-x-0 ${
+        className={`fixed top-0 left-0 h-full w-72 bg-[var(--color-kombu-green)] text-[var(--color-bone)] z-50 shadow-2xl transform transition-transform lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         initial={false}
@@ -90,19 +90,21 @@ export default function FarmerLayout({ children }) {
               href="/farmer/dashboard"
               className="flex items-center gap-3 group"
             >
-              <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20 group-hover:scale-110 transition-transform">
-                <Leaf className="w-6 h-6 text-white" strokeWidth={2.5} />
+              <div className="w-10 h-10 bg-[var(--color-tan)] rounded-xl flex items-center justify-center shadow-lg shadow-black/10 group-hover:scale-110 transition-transform">
+                <Leaf className="w-6 h-6 text-[var(--color-kombu-green)]" strokeWidth={2.5} />
               </div>
               <div>
-                <h1 className="text-xl font-bold tracking-tight">FarmChain</h1>
-                <p className="text-xs text-emerald-400 font-medium tracking-wider uppercase">
+                <h1 className="text-xl font-bold tracking-tight text-[#cfbb99]">
+                  FarmChain
+                </h1>
+                <p className="text-xs text-[var(--color-tan)] font-medium tracking-wider uppercase">
                   {t("farmer_portal")}
                 </p>
               </div>
             </Link>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden text-slate-400 hover:text-white p-2"
+              className="lg:hidden text-[var(--color-bone)]/70 hover:text-[var(--color-bone)] p-2"
             >
               <X className="w-5 h-5" />
             </button>
@@ -120,8 +122,8 @@ export default function FarmerLayout({ children }) {
                     <motion.div
                       className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all relative overflow-hidden ${
                         isActive
-                          ? "bg-emerald-600 text-white shadow-lg shadow-emerald-900/50"
-                          : "text-slate-400 hover:text-white hover:bg-white/5"
+                          ? "bg-[var(--color-moss-green)] text-[var(--color-cafe-noir)] shadow-lg shadow-black/20"
+                          : "text-[var(--color-bone)]/70 hover:text-[var(--color-bone)] hover:bg-white/5"
                       }`}
                       whileHover={{ x: 4 }}
                       whileTap={{ scale: 0.98 }}
@@ -129,7 +131,7 @@ export default function FarmerLayout({ children }) {
                       {isActive && (
                         <motion.div
                           layoutId="active-nav"
-                          className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-emerald-600 z-0"
+                          className="absolute inset-0 bg-gradient-to-r from-[var(--color-moss-green)] to-[var(--color-tan)] z-0"
                           initial={false}
                           transition={{
                             type: "spring",
@@ -139,7 +141,7 @@ export default function FarmerLayout({ children }) {
                         />
                       )}
                       <item.icon
-                        className={`w-5 h-5 relative z-10 ${isActive ? "text-white" : ""}`}
+                        className={`w-5 h-5 relative z-10 ${isActive ? "text-[var(--color-cafe-noir)]" : ""}`}
                         strokeWidth={2}
                       />
                       <span className="font-medium relative z-10">
@@ -157,7 +159,7 @@ export default function FarmerLayout({ children }) {
         <div className="p-6 border-t border-white/10">
           <motion.button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all font-medium"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[var(--color-bone)]/70 hover:bg-[var(--color-tan)]/10 hover:text-[var(--color-tan)] transition-all font-medium"
             whileHover={{ x: 4 }}
             whileTap={{ scale: 0.98 }}
           >
@@ -170,17 +172,17 @@ export default function FarmerLayout({ children }) {
       {/* Main Content */}
       <div className="lg:ml-72 transition-all duration-300">
         {/* Top Bar */}
-        <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30">
+        <header className="bg-[rgba(229,215,196,0.82)] backdrop-blur-md border-b border-[rgba(53,64,36,0.12)] sticky top-0 z-30">
           <div className="flex items-center justify-between px-6 lg:px-10 py-5">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden text-slate-600 hover:text-slate-900 p-2 hover:bg-slate-100 rounded-lg"
+                className="lg:hidden text-[var(--color-cafe-noir)]/70 hover:text-[var(--color-cafe-noir)] p-2 hover:bg-[rgba(207,187,153,0.4)] rounded-lg"
               >
                 <Menu className="w-6 h-6" />
               </button>
 
-              <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">
+              <h2 className="text-xl md:text-2xl font-bold text-[var(--color-cafe-noir)] tracking-tight">
                 {t(navigation.find((item) => item.href === pathname)?.key || "dashboard")}
               </h2>
             </div>
@@ -191,26 +193,26 @@ export default function FarmerLayout({ children }) {
               {/* Notifications */}
               <button
                 title={t("notifications")}
-                className="relative p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"
+                className="relative p-2 text-[var(--color-cafe-noir)]/60 hover:text-[var(--color-kombu-green)] hover:bg-[rgba(207,187,153,0.45)] rounded-xl transition-all"
               >
-                <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+                <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-[var(--color-moss-green)] rounded-full border-2 border-[var(--color-bone)]"></span>
                 <Bell className="w-6 h-6" />
               </button>
 
               {/* Separator */}
-              <div className="h-8 w-[1px] bg-slate-200"></div>
+              <div className="h-8 w-[1px] bg-[rgba(53,64,36,0.14)]"></div>
 
               {/* Profile */}
               <div className="flex items-center gap-4 cursor-pointer hover:opacity-80 transition-opacity">
                 <div className="hidden sm:block text-right">
-                  <p className="text-sm font-bold text-slate-900">
+                  <p className="text-sm font-bold text-[var(--color-cafe-noir)]">
                     {user?.name || "Farmer"}
                   </p>
-                  <p className="text-xs text-slate-500 font-medium">
+                  <p className="text-xs text-[var(--color-cafe-noir)]/70 font-medium">
                     {user?.email || "farmer@example.com"}
                   </p>
                 </div>
-                <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-lg shadow-emerald-500/20 flex items-center justify-center text-white font-bold ring-4 ring-white">
+                <div className="w-10 h-10 bg-gradient-to-br from-[var(--color-kombu-green)] to-[var(--color-moss-green)] rounded-xl shadow-lg shadow-black/10 flex items-center justify-center text-[var(--color-bone)] font-bold ring-4 ring-[var(--color-bone)]">
                   {getInitials(user?.name)}
                 </div>
               </div>

@@ -153,7 +153,7 @@ function AuthContainer() {
 
     try {
       if (mode === "login") {
-        const result = await login(formData.email, formData.password, role);
+        const result = await login(formData.email, formData.password);
         if (result.success) {
           router.push(
             result.user.role === "farmer"

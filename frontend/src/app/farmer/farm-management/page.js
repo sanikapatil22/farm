@@ -192,7 +192,7 @@ export default function FarmManagement() {
                     </div>
                     <button
                         onClick={openAddModal}
-                        className="px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors flex items-center gap-2"
+                        className="px-6 py-3 bg-[var(--color-kombu-green)] text-[var(--color-bone)] rounded-xl font-semibold hover:bg-[var(--color-moss-green)] transition-colors flex items-center gap-2"
                     >
                         <Plus className="w-5 h-5" />
                         {t('add_farm')}
@@ -211,7 +211,7 @@ export default function FarmManagement() {
                         <p className="text-stone-600 mb-6">{t('add_first_farm')}</p>
                         <button
                             onClick={openAddModal}
-                            className="px-8 py-4 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors inline-flex items-center gap-2"
+                            className="px-8 py-4 bg-[var(--color-kombu-green)] text-[var(--color-bone)] rounded-xl font-semibold hover:bg-[var(--color-moss-green)] transition-colors inline-flex items-center gap-2"
                         >
                             <Plus className="w-5 h-5" />
                             {t('add_first_farm')}
