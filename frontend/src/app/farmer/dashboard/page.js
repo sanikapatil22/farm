@@ -259,7 +259,10 @@ export default function FarmerDashboard() {
 
           <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
-              <h1 className={`text-3xl md:text-4xl font-bold mb-3 tracking-tight ${greetingClassName}`}>
+              <h1
+                className="text-3xl md:text-4xl font-bold mb-3 tracking-tight"
+                style={{ color: greetingText === t("good_afternoon") ? "#ffffff" : "#e6dbc4" }}
+              >
                 {greetingText}, {getFirstName(user?.name)}! 👋
               </h1>
               <p className="text-(--color-tan)/90 text-lg max-w-xl">

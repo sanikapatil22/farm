@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import FarmerLayout from '@/components/farmer/FarmerLayout';
+import VoiceLogger from '@/components/farmer/VoiceLogger';
 import {
     Plus,
+    Mic,
     Search,
     Filter,
     Package,
@@ -69,8 +71,10 @@ export default function BatchTracking() {
     const [searchTerm, setSearchTerm] = useState('');
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showActivityModal, setShowActivityModal] = useState(false);
+    const [showVoiceModal, setShowVoiceModal] = useState(false);
     const [showProductModal, setShowProductModal] = useState(false);
     const [selectedBatch, setSelectedBatch] = useState(null);
+    const [selectedVoiceBatchId, setSelectedVoiceBatchId] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
     const [verificationResults, setVerificationResults] = useState({});
@@ -313,6 +317,17 @@ export default function BatchTracking() {
         }
     };
 
+    const handleVoiceLogged = (updatedBatch) => {
+        if (!updatedBatch) return;
+
+        setBatches(prev => prev.map(batch => (
+            batch.id === updatedBatch.id
+                ? { ...batch, ...updatedBatch, farmInfo: batch.farmInfo }
+                : batch
+        )));
+        setError('');
+    };
+
     const handleDelete = async (id) => {
         if (!confirm('Are you sure you want to delete this batch?')) return;
 
@@ -328,6 +343,16 @@ export default function BatchTracking() {
         setSelectedBatch(batch);
         resetActivityForm();
         setShowActivityModal(true);
+    };
+
+    const openVoiceModal = () => {
+        const fallbackBatchId = selectedBatch?.id || batches[0]?.id || '';
+        setSelectedVoiceBatchId(fallbackBatchId);
+        setShowVoiceModal(true);
+    };
+
+    const closeVoiceModal = () => {
+        setShowVoiceModal(false);
     };
 
     const openProductModal = (batch) => {
@@ -527,6 +552,16 @@ export default function BatchTracking() {
                         >
                             <Plus className="w-5 h-5" />
                             {t('create_batch')}
+                        </motion.button>
+                        <motion.button
+                            onClick={openVoiceModal}
+                            disabled={batches.length === 0}
+                            className="px-6 py-3.5 bg-white/15 backdrop-blur-sm text-white rounded-xl font-bold shadow-lg hover:shadow-xl flex items-center gap-2 border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                            whileHover={{ scale: batches.length > 0 ? 1.02 : 1 }}
+                            whileTap={{ scale: batches.length > 0 ? 0.98 : 1 }}
+                        >
+                            <Mic className="w-5 h-5" />
+                            Speak Activity
                         </motion.button>
                     </div>
                 </div>
@@ -1129,7 +1164,6 @@ export default function BatchTracking() {
                                     </button>
                                 </div>
 
-                                {/* Blockchain Recording Notice */}
                                 <div className="mb-6 p-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl text-white flex items-center gap-3">
                                     <div className="p-1.5 bg-white/20 rounded-lg">
                                         <Link2 className="w-4 h-4" />
@@ -1326,6 +1360,70 @@ export default function BatchTracking() {
                                         </button>
                                     </div>
                                 </form>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Voice Activity Modal */}
+                <AnimatePresence>
+                    {showVoiceModal && (
+                        <motion.div
+                            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={closeVoiceModal}
+                        >
+                            <motion.div
+                                className="bg-white rounded-3xl p-6 md:p-8 max-w-3xl w-full shadow-2xl max-h-[90vh] overflow-y-auto"
+                                initial={{ scale: 0.95, y: 20 }}
+                                animate={{ scale: 1, y: 0 }}
+                                exit={{ scale: 0.95, y: 20 }}
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <div className="flex items-start justify-between gap-4 mb-5">
+                                    <div>
+                                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Separate Voice Button</p>
+                                        <h2 className="text-2xl font-bold text-stone-800">Speak Activity</h2>
+                                        <p className="text-sm text-stone-500 mt-1">
+                                            Pick a batch, speak in your local language, and let the app detect and log the activity.
+                                        </p>
+                                    </div>
+                                    <button onClick={closeVoiceModal} className="p-2 hover:bg-stone-100 rounded-xl">
+                                        <X className="w-6 h-6" />
+                                    </button>
+                                </div>
+
+                                <div className="mb-4">
+                                    <label className="block text-sm font-semibold text-stone-700 mb-2">Select Batch</label>
+                                    <select
+                                        value={selectedVoiceBatchId}
+                                        onChange={(e) => setSelectedVoiceBatchId(e.target.value)}
+                                        className="w-full px-4 py-3 border-2 border-stone-200 rounded-xl focus:border-green-500 outline-none bg-white"
+                                    >
+                                        <option value="">Choose a batch</option>
+                                        {batches.map((batch) => (
+                                            <option key={batch.id} value={batch.id}>
+                                                {batch.cropName} {batch.variety ? `- ${batch.variety}` : ''}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {selectedVoiceBatchId ? (
+                                    <VoiceLogger
+                                        batchId={selectedVoiceBatchId}
+                                        onLogged={(updatedBatch) => {
+                                            handleVoiceLogged(updatedBatch);
+                                            setShowVoiceModal(false);
+                                        }}
+                                    />
+                                ) : (
+                                    <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-sm text-slate-500">
+                                        Select a batch to start voice logging.
+                                    </div>
+                                )}
                             </motion.div>
                         </motion.div>
                     )}
