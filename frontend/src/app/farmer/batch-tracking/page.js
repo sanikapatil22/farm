@@ -1607,7 +1607,6 @@ export default function BatchTracking() {
                                             value={`${typeof window !== 'undefined' ? window.location.origin : 'https://farmchain.com'}/verify/${selectedBatch?.id}`}
                                             level="H"
                                             size={250}
-                                            includeMargin={true}
                                             fgColor="#000000"
                                             bgColor="#ffffff"
                                         />
