@@ -158,7 +158,8 @@ export default function VerifyBatchPage() {
         try {
             const response = await fetch(`/api/report/${batch.id}?download=true`);
             if (!response.ok) {
-                throw new Error('Failed to download report');
+                const errorBody = await response.json().catch(() => null);
+                throw new Error(errorBody?.message || 'Failed to download report');
             }
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
@@ -171,6 +172,7 @@ export default function VerifyBatchPage() {
             window.URL.revokeObjectURL(url);
         } catch (downloadError) {
             console.error(downloadError);
+            alert(downloadError?.message || 'Failed to download report');
         }
     };
 
