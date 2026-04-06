@@ -428,79 +428,38 @@ export default function BatchTracking() {
         try {
             const node = document.getElementById('qr-code-node');
             if (!node) {
+                console.error('QR code node not found');
                 alert('QR code element not found. Please try again.');
                 return;
             }
 
-            // Try to find the SVG element inside the container
-            const svg = node.querySelector('svg');
-            if (svg) {
-                // Convert SVG to canvas for better compatibility
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                const rect = svg.getBoundingClientRect();
-                const size = Math.max(rect.width, rect.height);
-                
-                canvas.width = size * 2; // 2x for better quality
-                canvas.height = size * 2;
-                ctx.scale(2, 2);
+            // Simple approach: directly use html-to-image
+            console.log('Starting QR download...');
+            
+            const dataUrl = await toPng(node, {
+                cacheBust: true,
+                pixelRatio: 3,
+                backgroundColor: '#ffffff',
+                quality: 1.0
+            });
 
-                const svgData = new XMLSerializer().serializeToString(svg);
-                const img = new Image();
-                const blob = new Blob([svgData], { type: 'image/svg+xml' });
-                const url = URL.createObjectURL(blob);
-
-                img.onload = () => {
-                    ctx.drawImage(img, 0, 0);
-                    URL.revokeObjectURL(url);
-                    
-                    const pngUrl = canvas.toDataURL('image/png');
-                    const link = document.createElement('a');
-                    link.download = `${selectedBatch?.cropName || 'batch'}-qrcode.png`;
-                    link.href = pngUrl;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                };
-
-                img.onerror = () => {
-                    URL.revokeObjectURL(url);
-                    console.error('Failed to load SVG image');
-                    fallbackDownload(node);
-                };
-
-                img.src = url;
-            } else {
-                // Fallback to html-to-image
-                fallbackDownload(node);
-            }
+            // Trigger download
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = `${selectedBatch?.cropName || 'batch'}-qrcode.png`;
+            
+            // Add to DOM, click, and remove
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            console.log('QR code downloaded successfully');
         } catch (error) {
-            console.error('QR download error:', error);
-            alert('Failed to download QR code. Please try again.');
+            console.error('QR download failed:', error);
+            alert(`Failed to download QR code: ${error.message}`);
         }
     };
 
-    const fallbackDownload = (node) => {
-        toPng(node, { 
-            cacheBust: true,
-            pixelRatio: 2,
-            backgroundColor: '#ffffff',
-            width: 300,
-            height: 300
-        })
-            .then((dataUrl) => {
-                const link = document.createElement('a');
-                link.download = `${selectedBatch?.cropName || 'batch'}-qrcode.png`;
-                link.href = dataUrl;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            })
-            .catch((err) => {
-                console.error('Fallback download error:', err);
-                alert('Failed to download QR code. Please take a screenshot instead.');
-            });
-    };
 
     const handleCreateProduct = async (e) => {
         e.preventDefault();
