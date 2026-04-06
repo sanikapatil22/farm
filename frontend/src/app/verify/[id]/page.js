@@ -19,7 +19,8 @@ import {
     Truck,
     CheckCircle2,
     Clock,
-    ExternalLink
+    ExternalLink,
+    Download
 } from 'lucide-react';
 
 const ACTIVITY_ICONS = {
@@ -46,8 +47,28 @@ export default function VerifyBatchPage() {
     const { t } = useTranslation();
     const params = useParams();
     const [batch, setBatch] = useState(null);
+    const [certification, setCertification] = useState(null);
+    const [report, setReport] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+
+    const normalizeScan = (value) => {
+        if (!value) return null;
+
+        let v = String(value).trim();
+
+        try {
+            const url = new URL(v);
+            v = url.pathname;
+        } catch (_) {
+            // Not a full URL, continue with raw value
+        }
+
+        const match = v.match(/\/verify\/([^/?#]+)/);
+        if (match) return match[1];
+
+        return v.replace(/\/+$/, '');
+    };
 
     const fetchData = useCallback(async (id) => {
         try {
@@ -74,6 +95,21 @@ export default function VerifyBatchPage() {
             }
 
             setBatch(data);
+
+            const [certRes, reportRes] = await Promise.all([
+                fetch(`/api/certification/${id}`),
+                fetch(`/api/report/${id}`)
+            ]);
+
+            if (certRes.ok) {
+                const certData = await certRes.json();
+                setCertification(certData);
+            }
+
+            if (reportRes.ok) {
+                const reportData = await reportRes.json();
+                setReport(reportData);
+            }
         } catch (err) {
             console.error('Error fetching batch:', err);
             setError(err.message || t('verify_load_error', 'Failed to load verification data. Please try again.'));
@@ -83,8 +119,9 @@ export default function VerifyBatchPage() {
     }, [t]);
 
     useEffect(() => {
-        if (params.id) {
-            fetchData(params.id);
+        const normalizedId = normalizeScan(params.id);
+        if (normalizedId) {
+            fetchData(normalizedId);
         }
     }, [params.id, fetchData]);
 
@@ -116,6 +153,26 @@ export default function VerifyBatchPage() {
             ? `${batch.farm.location.latitude.toFixed(4)}, ${batch.farm.location.longitude.toFixed(4)}`
             : t('location_unavailable', 'Location unavailable');
     const etherscanUrl = batch?.blockchain?.latestTxEtherscanUrl || batch?.blockchain?.contractEtherscanUrl;
+
+    const handleDownloadReport = async () => {
+        try {
+            const response = await fetch(`/api/report/${batch.id}?download=true`);
+            if (!response.ok) {
+                throw new Error('Failed to download report');
+            }
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `batch-report-${batch.id}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (downloadError) {
+            console.error(downloadError);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-[#ecfdf5] pb-12 font-sans">
@@ -196,6 +253,88 @@ export default function VerifyBatchPage() {
                         </a>
                     )}
                 </motion.div>
+
+                {/* Product Verification Report */}
+                <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    className="bg-white/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg border border-white/50"
+                >
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-bold text-stone-800">Product Verification Report</h2>
+                        <button
+                            onClick={handleDownloadReport}
+                            className="inline-flex items-center gap-2 rounded-xl bg-slate-800 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-700 transition-colors"
+                        >
+                            <Download className="h-4 w-4" />
+                            Download Report
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                        <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3">
+                            <p className="text-xs text-emerald-700 font-semibold">AI Certification</p>
+                            <p className="text-sm font-bold text-emerald-900 mt-1">
+                                {certification?.aiCertification?.label || 'AI Verification Pending'}
+                            </p>
+                            <p className="text-xs text-emerald-700 mt-1">
+                                Status: {certification?.aiCertification?.status || 'pending'}
+                                {certification?.aiCertification?.score != null ? ` • Score: ${certification.aiCertification.score}` : ''}
+                            </p>
+                        </div>
+
+                        <div className="rounded-xl border border-blue-100 bg-blue-50 p-3">
+                            <p className="text-xs text-blue-700 font-semibold">Third Party Certification</p>
+                            <p className="text-sm font-bold text-blue-900 mt-1">
+                                {certification?.thirdPartyCertification?.status === 'approved'
+                                    ? 'NPOP Certified ✔'
+                                    : certification?.thirdPartyCertification?.status === 'pending'
+                                        ? 'NPOP Certification Pending'
+                                        : 'Not Certified'}
+                            </p>
+                            {certification?.thirdPartyCertification?.status === 'approved' && (
+                                <p className="text-xs text-blue-700 mt-1">
+                                    Certificate ID: {certification.thirdPartyCertification.certificateId || 'N/A'}
+                                    {certification.thirdPartyCertification.expiresAt
+                                        ? ` • Valid till ${new Date(certification.thirdPartyCertification.expiresAt).toLocaleDateString()}`
+                                        : ''}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="rounded-xl border border-stone-200 p-3">
+                        <p className="text-xs text-stone-500 mb-2">Compliance & Trust</p>
+                        <p className="text-sm text-stone-700">
+                            Trust Score: <strong>{report?.trustScore ?? 'N/A'}</strong>
+                        </p>
+                        <p className="text-sm text-stone-700">
+                            Timeline Events: <strong>{report?.compliance?.timelineEvents ?? batch.timeline?.length ?? 0}</strong>
+                        </p>
+                    </div>
+                </motion.div>
+
+                {/* Blockchain Logs */}
+                <div className="bg-white/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg border border-white/50">
+                    <h2 className="text-lg font-bold text-stone-800 mb-4">Blockchain Transactions</h2>
+                    <div className="space-y-3">
+                        {(report?.blockchain?.logs || [])
+                            .slice(0, 8)
+                            .map((log, index) => (
+                                <div key={`${log.txHash}-${index}`} className="rounded-xl border border-stone-200 p-3">
+                                    <p className="text-xs text-stone-500">Tx Hash</p>
+                                    <p className="text-xs font-mono text-stone-700 break-all mt-1">{log.txHash}</p>
+                                    <p className="text-xs text-stone-500 mt-2">
+                                        Timestamp: {log.timestamp ? new Date(log.timestamp).toLocaleString() : 'N/A'}
+                                    </p>
+                                </div>
+                            ))}
+
+                        {(!report?.blockchain?.logs || report.blockchain.logs.length === 0) && (
+                            <p className="text-sm text-stone-500">No blockchain transaction logs available.</p>
+                        )}
+                    </div>
+                </div>
 
                 {/* Journey Timeline */}
                 <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-6 shadow-lg border border-white/50">

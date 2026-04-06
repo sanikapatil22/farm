@@ -4,8 +4,24 @@ const Farm = require("../models/farm");
 const User = require("../models/user");
 
 class TraceabilityService {
+    normalizeQRCode(rawQrCode) {
+        if (!rawQrCode) return '';
+
+        const value = String(rawQrCode).trim();
+        const verifyMarker = '/verify/';
+        const markerIndex = value.indexOf(verifyMarker);
+
+        if (markerIndex === -1) {
+            return value;
+        }
+
+        const idPart = value.slice(markerIndex + verifyMarker.length);
+        return idPart.split(/[?#]/)[0].replace(/^\/+|\/+$/g, '');
+    }
+
     async getTraceByQR(qrCode) {
-        let product = await Product.findOne({ qrCode });
+        const normalizedQrCode = this.normalizeQRCode(qrCode);
+        let product = await Product.findOne({ qrCode: normalizedQrCode });
         let batch = null;
         let farm = null;
         let farmer = null;
@@ -16,9 +32,9 @@ class TraceabilityService {
                 farm = await Farm.findById(batch.farm);
                 farmer = await User.findById(product.farmer);
             }
-        } else if (qrCode.match(/^[0-9a-fA-F]{24}$/)) {
+        } else if (normalizedQrCode.match(/^[0-9a-fA-F]{24}$/)) {
             // Fallback 1: Try finding by Product ID directly
-            product = await Product.findById(qrCode);
+            product = await Product.findById(normalizedQrCode);
             if (product) {
                 batch = await Batch.findById(product.batch);
                 if (batch) {
@@ -29,7 +45,7 @@ class TraceabilityService {
             
             // Fallback 2: Try finding by Batch ID directly
             if (!product) {
-                batch = await Batch.findById(qrCode);
+                batch = await Batch.findById(normalizedQrCode);
                 if (batch) {
                     farm = await Farm.findById(batch.farm);
                     if (farm) {
@@ -46,7 +62,7 @@ class TraceabilityService {
                         pricePerKg: 0,
                         availableQty: 0,
                         isOrganic: false, // Will be calculated
-                        qrCode: qrCode,
+                        qrCode: normalizedQrCode,
                         status: 'active',
                         createdAt: batch.createdAt,
                         farmer: farmer ? farmer._id : null

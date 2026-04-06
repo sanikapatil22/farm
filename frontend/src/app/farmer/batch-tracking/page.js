@@ -76,6 +76,8 @@ export default function BatchTracking() {
     const [verificationResults, setVerificationResults] = useState({});
     const [verifying, setVerifying] = useState({});
     const [showQRModal, setShowQRModal] = useState(false);
+    const [certificationByBatch, setCertificationByBatch] = useState({});
+    const [requestingCertification, setRequestingCertification] = useState({});
 
     const [formData, setFormData] = useState({
         farm: '',
@@ -172,6 +174,45 @@ export default function BatchTracking() {
             return () => clearInterval(interval);
         }
     }, [batches]);
+
+    useEffect(() => {
+        const loadCertifications = async () => {
+            const missingBatchIds = batches
+                .map((batch) => batch.id)
+                .filter((id) => !certificationByBatch[id]);
+
+            if (missingBatchIds.length === 0) {
+                return;
+            }
+
+            try {
+                const responses = await Promise.all(
+                    missingBatchIds.map(async (batchId) => {
+                        const response = await fetch(`/api/certification/${batchId}`);
+                        if (!response.ok) {
+                            return [batchId, null];
+                        }
+                        const data = await response.json();
+                        return [batchId, data];
+                    })
+                );
+
+                setCertificationByBatch((prev) => {
+                    const next = { ...prev };
+                    responses.forEach(([batchId, data]) => {
+                        next[batchId] = data;
+                    });
+                    return next;
+                });
+            } catch (e) {
+                console.error('Failed to load certifications', e);
+            }
+        };
+
+        if (batches.length > 0) {
+            loadCertifications();
+        }
+    }, [batches, certificationByBatch]);
 
     const resetForm = () => {
         setFormData({
@@ -316,6 +357,40 @@ export default function BatchTracking() {
             console.error('Verification failed:', err);
         } finally {
             setVerifying(prev => ({ ...prev, [batchId]: false }));
+        }
+    };
+
+    const requestCertification = async (batchId) => {
+        setRequestingCertification((prev) => ({ ...prev, [batchId]: true }));
+        try {
+            const response = await fetch('/api/certification', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    batchId,
+                    authority: 'NPOP'
+                })
+            });
+
+            const result = await response.json();
+            if (!response.ok || result?.success === false) {
+                throw new Error(result?.message || 'Failed to request certification');
+            }
+
+            const refreshed = await fetch(`/api/certification/${batchId}`);
+            if (refreshed.ok) {
+                const refreshedData = await refreshed.json();
+                setCertificationByBatch((prev) => ({
+                    ...prev,
+                    [batchId]: refreshedData
+                }));
+            }
+        } catch (e) {
+            console.error('Certification request failed', e);
+        } finally {
+            setRequestingCertification((prev) => ({ ...prev, [batchId]: false }));
         }
     };
 
@@ -496,6 +571,9 @@ export default function BatchTracking() {
                             const confirmedCount = batch.activities?.filter(a => a.blockchainStatus === 'confirmed').length || 0;
                             const pendingCount = batch.activities?.filter(a => a.blockchainStatus === 'pending').length || 0;
                             const totalActivities = batch.activities?.length || 0;
+                            const certificationInfo = certificationByBatch[batch.id];
+                            const thirdPartyStatus = certificationInfo?.thirdPartyCertification?.status;
+                            const aiStatus = certificationInfo?.aiCertification?.status;
 
                             return (
                                 <motion.div
@@ -607,6 +685,37 @@ export default function BatchTracking() {
                                                     <p className="text-sm font-semibold text-stone-800">
                                                         PIN: {batch.farmInfo?.pinCode || batch.farm}
                                                     </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="mb-6 rounded-xl border border-stone-200 p-4 bg-stone-50">
+                                            <div className="grid md:grid-cols-2 gap-3">
+                                                <div>
+                                                    <p className="text-xs text-stone-500">AI Certification</p>
+                                                    <p className="text-sm font-bold text-stone-800 mt-1">
+                                                        {aiStatus === 'certified' ? 'AI Verified Organic ✔' : 'AI Verification In Progress'}
+                                                    </p>
+                                                    {certificationInfo?.aiCertification?.score != null && (
+                                                        <p className="text-xs text-stone-600 mt-1">Score: {certificationInfo.aiCertification.score}</p>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs text-stone-500">Third-party Certification</p>
+                                                    <p className="text-sm font-bold text-stone-800 mt-1">
+                                                        {thirdPartyStatus === 'approved'
+                                                            ? 'NPOP Certified ✔'
+                                                            : thirdPartyStatus === 'pending'
+                                                                ? 'NPOP Certification Pending'
+                                                                : thirdPartyStatus === 'rejected'
+                                                                    ? 'NPOP Rejected'
+                                                                    : 'Not Requested'}
+                                                    </p>
+                                                    {thirdPartyStatus === 'approved' && certificationInfo?.thirdPartyCertification?.certificateId && (
+                                                        <p className="text-xs text-stone-600 mt-1">
+                                                            Certificate ID: {certificationInfo.thirdPartyCertification.certificateId}
+                                                        </p>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -819,6 +928,25 @@ export default function BatchTracking() {
                                             >
                                                 <QrCode className="w-4 h-4" />
                                                 QR Code
+                                            </motion.button>
+
+                                            <motion.button
+                                                onClick={() => requestCertification(batch.id)}
+                                                disabled={requestingCertification[batch.id] || thirdPartyStatus === 'pending' || thirdPartyStatus === 'approved'}
+                                                className={`px-4 py-2 rounded-lg font-semibold transition-colors text-sm flex items-center gap-2 ${
+                                                    requestingCertification[batch.id] || thirdPartyStatus === 'pending' || thirdPartyStatus === 'approved'
+                                                        ? 'bg-stone-100 text-stone-400 cursor-not-allowed'
+                                                        : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                                }`}
+                                                whileHover={requestingCertification[batch.id] || thirdPartyStatus === 'pending' || thirdPartyStatus === 'approved' ? {} : { scale: 1.02 }}
+                                                whileTap={requestingCertification[batch.id] || thirdPartyStatus === 'pending' || thirdPartyStatus === 'approved' ? {} : { scale: 0.98 }}
+                                            >
+                                                {requestingCertification[batch.id] ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
+                                                {thirdPartyStatus === 'approved'
+                                                    ? 'NPOP Certified'
+                                                    : thirdPartyStatus === 'pending'
+                                                        ? 'Certification Pending'
+                                                        : 'Request Certification'}
                                             </motion.button>
                                         </div>
                                     </div>

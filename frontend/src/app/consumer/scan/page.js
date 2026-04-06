@@ -47,22 +47,35 @@ function ConsumerScanContent() {
     }
   }, [searchParams]);
 
+  const normalizeQrCode = (value) => {
+    if (!value) return "";
+
+    let v = String(value).trim();
+
+    try {
+      const url = new URL(v);
+      v = url.pathname;
+    } catch (_) {
+      // Not a full URL, continue with raw value
+    }
+
+    const match = v.match(/\/verify\/([^/?#]+)/);
+    if (match) return match[1];
+
+    return v.replace(/\/+$/, "");
+  };
+
   const handleScanWithCode = async (code) => {
     if (!code) return;
 
-    // Clean URL if present
-    let cleanCode = code;
-    if (code.includes('/verify/')) {
-        const parts = code.split('/verify/');
-        cleanCode = parts[1];
-    }
+    const cleanCode = normalizeQrCode(code);
     setQrInput(cleanCode);
 
     setIsScanning(true);
     setError(null);
 
     try {
-      const data = await graphqlRequest(TRACE_PRODUCT, { qrCode: code });
+      const data = await graphqlRequest(TRACE_PRODUCT, { qrCode: cleanCode });
 
       if (data?.traceProduct) {
         setScanResult(data.traceProduct);

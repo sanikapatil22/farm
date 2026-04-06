@@ -11,6 +11,8 @@ const mongoose = require('mongoose');
 const Batch = require('./models/batch');
 const blockchainService = require('./services/blockchainService');
 const predictionRoutes = require('./routes/prediction');
+const certificationRoutes = require('./routes/certification');
+const reportRoutes = require('./routes/report');
 
 const PORT = process.env.PORT || 4000;
 
@@ -41,6 +43,8 @@ const startServer = async () => {
         });
 
         app.use('/api/predict', predictionRoutes);
+        app.use('/api/certification', certificationRoutes);
+        app.use('/api/report', reportRoutes);
 
         // Public verification endpoint (no auth): used by QR scan page
         app.get('/api/batch/:id', async (req, res) => {

@@ -15,6 +15,24 @@ export default function ScannerModal({ isOpen, onClose, onScan }) {
     const scannerRef = useRef(null);
     const fileInputRef = useRef(null);
 
+    const normalizeScan = (value) => {
+        if (!value) return null;
+
+        let v = String(value).trim();
+
+        try {
+            const url = new URL(v);
+            v = url.pathname;
+        } catch (_) {
+            // Not a full URL, continue with raw value
+        }
+
+        const match = v.match(/\/verify\/([^/?#]+)/);
+        if (match) return match[1];
+
+        return v.replace(/\/+$/, '');
+    };
+
     // Keep router ref updated
     useEffect(() => {
         routerRef.current = router;
@@ -39,11 +57,8 @@ export default function ScannerModal({ isOpen, onClose, onScan }) {
         // Parse URL to get ID
         // Expected format: https://farmchain.com/verify/BATCH_ID
         // or just BATCH_ID
-        let batchId = decodedText;
-        if (decodedText.includes('/verify/')) {
-            const parts = decodedText.split('/verify/');
-            batchId = parts[1];
-        }
+        const raw = decodedText?.text || decodedText;
+        const batchId = normalizeScan(raw);
 
         if (batchId) {
             onClose();
