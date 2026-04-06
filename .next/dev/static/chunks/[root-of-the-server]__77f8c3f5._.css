@@ -873,6 +873,7 @@ svg.leaflet-zoom-animated {
     --color-amber-600: #dd7400;
     --color-amber-700: #b75000;
     --color-amber-800: #953d00;
+    --color-amber-900: #7b3306;
     --color-yellow-100: #fef9c2;
     --color-yellow-200: #fff085;
     --color-yellow-300: #ffe02a;
@@ -1055,6 +1056,7 @@ svg.leaflet-zoom-animated {
       --color-amber-600: lab(60.3514% 40.5624 87.1228);
       --color-amber-700: lab(47.2709% 42.9082 69.2966);
       --color-amber-800: lab(37.8822% 37.1699 52.2718);
+      --color-amber-900: lab(31.2288% 30.2627 40.0378);
       --color-yellow-100: lab(97.3564% -4.51407 27.344);
       --color-yellow-200: lab(94.3433% -5.00429 52.9663);
       --color-yellow-300: lab(89.7033% -.480294 84.4917);
@@ -1587,6 +1589,10 @@ svg.leaflet-zoom-animated {
 
   .left-4 {
     left: calc(var(--spacing) * 4);
+  }
+
+  .left-4\.75 {
+    left: calc(var(--spacing) * 4.75);
   }
 
   .left-6 {
@@ -2240,6 +2246,10 @@ svg.leaflet-zoom-animated {
     flex-grow: 1;
   }
 
+  .table-fixed {
+    table-layout: fixed;
+  }
+
   .origin-left {
     transform-origin: 0;
   }
@@ -2557,6 +2567,10 @@ svg.leaflet-zoom-animated {
 
   :where(.divide-stone-800 > :not(:last-child)) {
     border-color: var(--color-stone-800);
+  }
+
+  .self-start {
+    align-self: flex-start;
   }
 
   .truncate {
@@ -2995,12 +3009,32 @@ svg.leaflet-zoom-animated {
     }
   }
 
-  .bg-\[\#0f172a\] {
-    background-color: #0f172a;
+  .bg-\(--color-kombu-green\) {
+    background-color: var(--color-kombu-green);
   }
 
-  .bg-\[\#022c22\] {
-    background-color: #022c22;
+  .bg-\(--color-moss-green\)\/12 {
+    background-color: var(--color-moss-green);
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .bg-\(--color-moss-green\)\/12 {
+      background-color: color-mix(in oklab, var(--color-moss-green) 12%, transparent);
+    }
+  }
+
+  .bg-\(--color-tan\)\/20 {
+    background-color: var(--color-tan);
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .bg-\(--color-tan\)\/20 {
+      background-color: color-mix(in oklab, var(--color-tan) 20%, transparent);
+    }
+  }
+
+  .bg-\[\#0f172a\] {
+    background-color: #0f172a;
   }
 
   .bg-\[\#064e3b\] {
@@ -3051,8 +3085,28 @@ svg.leaflet-zoom-animated {
     background-color: var(--color-moss-green);
   }
 
+  .bg-\[var\(--color-moss-green\)\]\/12 {
+    background-color: var(--color-moss-green);
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .bg-\[var\(--color-moss-green\)\]\/12 {
+      background-color: color-mix(in oklab, var(--color-moss-green) 12%, transparent);
+    }
+  }
+
   .bg-\[var\(--color-tan\)\] {
     background-color: var(--color-tan);
+  }
+
+  .bg-\[var\(--color-tan\)\]\/20 {
+    background-color: var(--color-tan);
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .bg-\[var\(--color-tan\)\]\/20 {
+      background-color: color-mix(in oklab, var(--color-tan) 20%, transparent);
+    }
   }
 
   .bg-amber-50 {
@@ -3517,16 +3571,6 @@ svg.leaflet-zoom-animated {
     background-color: var(--color-stone-900);
   }
 
-  .bg-teal-500\/10 {
-    background-color: #00baa71a;
-  }
-
-  @supports (color: color-mix(in lab, red, red)) {
-    .bg-teal-500\/10 {
-      background-color: color-mix(in oklab, var(--color-teal-500) 10%, transparent);
-    }
-  }
-
   .bg-transparent {
     background-color: #0000;
   }
@@ -3629,6 +3673,20 @@ svg.leaflet-zoom-animated {
 
   .bg-yellow-300 {
     background-color: var(--color-yellow-300);
+  }
+
+  .bg-linear-to-br {
+    --tw-gradient-position: to bottom right;
+  }
+
+  @supports (background-image: linear-gradient(in lab, red, red)) {
+    .bg-linear-to-br {
+      --tw-gradient-position: to bottom right in oklab;
+    }
+  }
+
+  .bg-linear-to-br {
+    background-image: linear-gradient(var(--tw-gradient-stops));
   }
 
   .bg-gradient-to-b {
@@ -4495,6 +4553,15 @@ svg.leaflet-zoom-animated {
     font-size: 10px;
   }
 
+  .text-\[11px\] {
+    font-size: 11px;
+  }
+
+  .leading-5 {
+    --tw-leading: calc(var(--spacing) * 5);
+    line-height: calc(var(--spacing) * 5);
+  }
+
   .leading-\[1\.1\] {
     --tw-leading: 1.1;
     line-height: 1.1;
@@ -4574,8 +4641,38 @@ svg.leaflet-zoom-animated {
     white-space: nowrap;
   }
 
+  .text-\(--color-bone\) {
+    color: var(--color-bone);
+  }
+
+  .text-\(--color-tan\) {
+    color: var(--color-tan);
+  }
+
+  .text-\(--color-tan\)\/90 {
+    color: var(--color-tan);
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .text-\(--color-tan\)\/90 {
+      color: color-mix(in oklab, var(--color-tan) 90%, transparent);
+    }
+  }
+
   .text-\[\#064e3b\] {
     color: #064e3b;
+  }
+
+  .text-\[\#cfbb99\] {
+    color: #cfbb99;
+  }
+
+  .text-\[\#e6dbc4\] {
+    color: #e6dbc4;
+  }
+
+  .text-\[\#f7f1e6\] {
+    color: #f7f1e6;
   }
 
   .text-\[rgba\(76\,61\,25\,0\.72\)\] {
@@ -4648,6 +4745,16 @@ svg.leaflet-zoom-animated {
     color: var(--color-tan);
   }
 
+  .text-\[var\(--color-tan\)\]\/90 {
+    color: var(--color-tan);
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .text-\[var\(--color-tan\)\]\/90 {
+      color: color-mix(in oklab, var(--color-tan) 90%, transparent);
+    }
+  }
+
   .text-amber-500 {
     color: var(--color-amber-500);
   }
@@ -4662,6 +4769,10 @@ svg.leaflet-zoom-animated {
 
   .text-amber-800 {
     color: var(--color-amber-800);
+  }
+
+  .text-amber-900 {
+    color: var(--color-amber-900);
   }
 
   .text-blue-100 {
@@ -4700,16 +4811,6 @@ svg.leaflet-zoom-animated {
 
   .text-emerald-100 {
     color: var(--color-emerald-100);
-  }
-
-  .text-emerald-100\/80 {
-    color: #d0fae5cc;
-  }
-
-  @supports (color: color-mix(in lab, red, red)) {
-    .text-emerald-100\/80 {
-      color: color-mix(in oklab, var(--color-emerald-100) 80%, transparent);
-    }
   }
 
   .text-emerald-200 {
@@ -5259,16 +5360,6 @@ svg.leaflet-zoom-animated {
     }
   }
 
-  .shadow-emerald-900\/20 {
-    --tw-shadow-color: #004e3b33;
-  }
-
-  @supports (color: color-mix(in lab, red, red)) {
-    .shadow-emerald-900\/20 {
-      --tw-shadow-color: color-mix(in oklab, color-mix(in oklab, var(--color-emerald-900) 20%, transparent) var(--tw-shadow-alpha), transparent);
-    }
-  }
-
   .shadow-slate-200\/50 {
     --tw-shadow-color: #e2e8f080;
   }
@@ -5728,6 +5819,12 @@ svg.leaflet-zoom-animated {
   @media (hover: hover) {
     .hover\:border-stone-300:hover {
       border-color: var(--color-stone-300);
+    }
+  }
+
+  @media (hover: hover) {
+    .hover\:bg-\(--color-moss-green\):hover {
+      background-color: var(--color-moss-green);
     }
   }
 
@@ -6607,8 +6704,8 @@ svg.leaflet-zoom-animated {
   }
 
   @media (min-width: 64rem) {
-    .lg\:col-span-2 {
-      grid-column: span 2 / span 2;
+    .lg\:col-span-3 {
+      grid-column: span 3 / span 3;
     }
   }
 

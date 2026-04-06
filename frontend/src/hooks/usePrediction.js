@@ -2,6 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { predict } from "@/lib/predict";
+import { getCachedPrediction } from "@/utils/predictionCache";
+
+function formatCurrency(value, fallback) {
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) {
+    return fallback;
+  }
+
+  return `₹${Math.round(numericValue)}/kg`;
+}
 
 export function usePrediction(input, predictionMode = "adaptive") {
   const [prediction, setPrediction] = useState({
@@ -26,29 +36,24 @@ export function usePrediction(input, predictionMode = "adaptive") {
         });
 
         const serverPrediction = payload?.prediction || {};
+        const fallbackPrediction = getCachedPrediction(normalizedInput);
 
         if (!cancelled) {
           setPrediction({
-            yield: `${serverPrediction.yield ?? 2.1} tons`,
-            demand: serverPrediction.demand || "Medium",
+            yield: serverPrediction.yield != null
+              ? `${Number(serverPrediction.yield).toFixed(1)} tons`
+              : fallbackPrediction.yield,
+            demand: serverPrediction.demand || fallbackPrediction.demand,
             price: {
-              sellNow: `₹${serverPrediction.sellNow ?? 30}/kg`,
-              wait: `₹${serverPrediction.wait ?? 34}/kg`
+              sellNow: formatCurrency(serverPrediction.sellNow, fallbackPrediction.price.sellNow),
+              wait: formatCurrency(serverPrediction.wait, fallbackPrediction.price.wait)
             },
-            modeUsed: serverPrediction.modeUsed || "cache"
+            modeUsed: serverPrediction.modeUsed || fallbackPrediction.modeUsed
           });
         }
       } catch {
         if (!cancelled) {
-          setPrediction({
-            yield: "2.1 tons",
-            demand: "Medium",
-            price: {
-              sellNow: "₹30/kg",
-              wait: "₹34/kg"
-            },
-            modeUsed: "cache"
-          });
+          setPrediction(getCachedPrediction(normalizedInput));
         }
       }
     };

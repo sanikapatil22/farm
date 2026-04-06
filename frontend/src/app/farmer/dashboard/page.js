@@ -9,7 +9,7 @@ import CreateBatchModal from "@/components/farmer/CreateBatchModal";
 import { useAuth } from "@/context/AuthContext";
 import { graphqlRequest } from "@/lib/apollo-client";
 import { MY_FARMS_QUERY } from "@/lib/graphql/farm";
-import { LIST_BATCHES_SIMPLE_QUERY } from "@/lib/graphql/batch";
+import { LIST_BATCHES_QUERY } from "@/lib/graphql/batch";
 import { MY_PRODUCTS_QUERY } from "@/lib/graphql/product";
 import { usePrediction } from "@/hooks/usePrediction";
 import {
@@ -63,7 +63,7 @@ export default function FarmerDashboard() {
       
       try {
         const [batchesData, productsData] = await Promise.all([
-          graphqlRequest(LIST_BATCHES_SIMPLE_QUERY, { farm: farmId }),
+          graphqlRequest(LIST_BATCHES_QUERY, { farm: farmId }),
           graphqlRequest(MY_PRODUCTS_QUERY)
         ]);
         
@@ -171,18 +171,65 @@ export default function FarmerDashboard() {
   }));
 
   const latestBatch = batches[0] || null;
+  const latestBatchActivities = latestBatch?.activities || [];
+  const marketConditions = useMemo(() => {
+    const activeProductsList = products.filter((product) => product.status === "active");
+    const totalAvailableQty = products.reduce(
+      (sum, product) => sum + Number(product.availableQty || 0),
+      0,
+    );
+    const totalSoldQty = products.reduce(
+      (sum, product) => sum + Number(product.soldQuantity || 0),
+      0,
+    );
+    const totalPrice = products.reduce(
+      (sum, product) => sum + Number(product.pricePerKg || 0),
+      0,
+    );
+    const averageListingPrice = products.length > 0 ? totalPrice / products.length : 0;
+
+    return {
+      activeProducts: activeProductsList.length,
+      totalProducts: products.length,
+      totalAvailableQty,
+      totalSoldQty,
+      averageListingPrice,
+      activeListingRatio: products.length > 0 ? activeProductsList.length / products.length : 0,
+      inventoryPressure:
+        totalAvailableQty > 0 || totalSoldQty > 0
+          ? totalAvailableQty / Math.max(totalAvailableQty + totalSoldQty, 1)
+          : 0,
+    };
+  }, [products]);
+
   const predictionInput = useMemo(() => ({
     crop: latestBatch?.cropName || latestBatch?.cropCategory || "default",
     location: latestBatch?.farmInfo?.pinCode || "",
-    activities: latestBatch?.activities || [],
-    timeline: latestBatch?.activities || [],
+    activities: latestBatchActivities,
+    timeline: latestBatchActivities,
     quantity: latestBatch?.quantity || latestBatch?.availableQty || "",
     weather: latestBatch?.weather || null,
     soil: latestBatch?.soilType || null,
-    history: (latestBatch?.activities?.length || 0) > 0 ? latestBatch.activities : null
-  }), [latestBatch]);
+    sowingDate: latestBatch?.sowingDate || null,
+    expectedHarvestDate: latestBatch?.expectedHarvestDate || null,
+    history: latestBatchActivities.length > 0 ? latestBatchActivities : null,
+    marketConditions
+  }), [latestBatch, latestBatchActivities, marketConditions]);
 
   const prediction = usePrediction(predictionInput, predictionMode);
+
+  const predictionSourceSummary = useMemo(() => {
+    const logCount = latestBatchActivities.length;
+    const activeListings = marketConditions.activeProducts;
+    const pressure = marketConditions.inventoryPressure;
+    const pressureLabel = pressure >= 0.66 ? "high market pressure" : pressure <= 0.33 ? "low market pressure" : "balanced market pressure";
+
+    return `Derived from ${logCount} activity log${logCount === 1 ? "" : "s"} and ${activeListings} active listing${activeListings === 1 ? "" : "s"} with ${pressureLabel}.`;
+  }, [latestBatchActivities.length, marketConditions.activeProducts, marketConditions.inventoryPressure]);
+
+  const greetingText = getGreeting();
+  const greetingClassName =
+    greetingText === t("good_afternoon") ? "text-white" : "text-[#e6dbc4]";
 
   const modeBadgeLabel =
     prediction.modeUsed === "ai"
@@ -202,22 +249,22 @@ export default function FarmerDashboard() {
       <div className="space-y-8">
         {/* Welcome Section */}
         <motion.div
-          className="relative overflow-hidden bg-[var(--color-kombu-green)] rounded-3xl p-8 md:p-10 text-[var(--color-tan)] shadow-lg border border-white/10"
+          className="relative overflow-hidden bg-(--color-kombu-green) rounded-3xl p-8 md:p-10 text-(--color-tan) shadow-lg border border-white/10"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="absolute top-0 right-0 w-96 h-96 bg-[var(--color-tan)]/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-[var(--color-moss-green)]/12 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3" />
+          <div className="absolute top-0 right-0 w-96 h-96 bg-(--color-tan)/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-(--color-moss-green)/12 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3" />
 
           <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold mb-3 tracking-tight text-[#e6dbc4]">
-                {getGreeting()}, {getFirstName(user?.name)}! 👋
+              <h1 className={`text-3xl md:text-4xl font-bold mb-3 tracking-tight ${greetingClassName}`}>
+                {greetingText}, {getFirstName(user?.name)}! 👋
               </h1>
-              <p className="text-[var(--color-tan)]/90 text-lg max-w-xl">
+              <p className="text-(--color-tan)/90 text-lg max-w-xl">
                 {batches.length > 0 ? (
-                  <>You have <span className="text-[var(--color-tan)] font-bold">{batches.length} batches</span> and <span className="text-[var(--color-tan)] font-bold">{activeProducts} active products</span>.</>
+                  <>You have <span className="text-(--color-tan) font-bold">{batches.length} batches</span> and <span className="text-(--color-tan) font-bold">{activeProducts} active products</span>.</>
                 ) : (
                   <>Get started by creating your first batch to track your farm production.</>
                 )}
@@ -226,7 +273,7 @@ export default function FarmerDashboard() {
             <div className="flex gap-3">
               <motion.button
                 onClick={() => setIsCreateBatchOpen(true)}
-                className={`px-6 py-3.5 bg-[var(--color-kombu-green)] hover:bg-[var(--color-moss-green)] text-[var(--color-bone)] rounded-xl font-bold shadow-lg shadow-black/10 transition-all flex items-center gap-2 ${loadingFarm ? 'opacity-70 cursor-wait' : ''}`}
+                className={`px-6 py-3.5 bg-(--color-kombu-green) hover:bg-(--color-moss-green) text-(--color-bone) rounded-xl font-bold shadow-lg shadow-black/10 transition-all flex items-center gap-2 ${loadingFarm ? 'opacity-70 cursor-wait' : ''}`}
                 whileHover={{ scale: loadingFarm ? 1 : 1.05 }}
                 whileTap={{ scale: loadingFarm ? 1 : 0.95 }}
                 disabled={loadingFarm}
@@ -380,7 +427,7 @@ export default function FarmerDashboard() {
                   <p className="text-slate-400 text-sm mt-1">Create your first batch to get started</p>
                   <button
                     onClick={() => setIsCreateBatchOpen(true)}
-                    className="mt-4 px-4 py-2 bg-[var(--color-kombu-green)] text-[var(--color-bone)] rounded-lg font-medium text-sm hover:bg-[var(--color-moss-green)] transition"
+                    className="mt-4 px-4 py-2 bg-(--color-kombu-green) text-(--color-bone) rounded-lg font-medium text-sm hover:bg-(--color-moss-green) transition"
                   >
                     Create Batch
                   </button>
@@ -403,7 +450,7 @@ export default function FarmerDashboard() {
               {activityData.length > 0 ? (
                 <div className="space-y-6 relative">
                   {/* Timeline Line */}
-                  <div className="absolute left-[19px] top-2 bottom-2 w-[2px] bg-slate-100"></div>
+                  <div className="absolute left-4.75 top-2 bottom-2 w-0.5 bg-slate-100"></div>
 
                   {activityData.map((activity, index) => (
                     <motion.div
@@ -467,6 +514,10 @@ export default function FarmerDashboard() {
                 </span>
               </div>
 
+              <p className="mb-4 text-xs font-medium text-slate-500 leading-5">
+                {predictionSourceSummary}
+              </p>
+
               <div className="space-y-4">
                 <div className="rounded-xl border border-slate-100 p-3">
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Expected Yield</p>
@@ -491,7 +542,7 @@ export default function FarmerDashboard() {
             </motion.div>
 
             <motion.div
-              className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-3xl shadow-lg p-6 text-white relative overflow-hidden"
+              className="bg-linear-to-br from-indigo-600 to-violet-700 rounded-3xl shadow-lg p-6 text-white relative overflow-hidden"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
