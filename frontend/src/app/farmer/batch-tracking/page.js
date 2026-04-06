@@ -424,28 +424,82 @@ export default function BatchTracking() {
         setShowQRModal(true);
     };
 
-    const handleDownloadQR = () => {
-        const node = document.getElementById('qr-code-node');
-        if (node) {
-            toPng(node, { 
-                cacheBust: true,
-                pixelRatio: 2,
-                width: 300,
-                height: 300
-            })
-                .then((dataUrl) => {
+    const handleDownloadQR = async () => {
+        try {
+            const node = document.getElementById('qr-code-node');
+            if (!node) {
+                alert('QR code element not found. Please try again.');
+                return;
+            }
+
+            // Try to find the SVG element inside the container
+            const svg = node.querySelector('svg');
+            if (svg) {
+                // Convert SVG to canvas for better compatibility
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const rect = svg.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                
+                canvas.width = size * 2; // 2x for better quality
+                canvas.height = size * 2;
+                ctx.scale(2, 2);
+
+                const svgData = new XMLSerializer().serializeToString(svg);
+                const img = new Image();
+                const blob = new Blob([svgData], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+
+                img.onload = () => {
+                    ctx.drawImage(img, 0, 0);
+                    URL.revokeObjectURL(url);
+                    
+                    const pngUrl = canvas.toDataURL('image/png');
                     const link = document.createElement('a');
                     link.download = `${selectedBatch?.cropName || 'batch'}-qrcode.png`;
-                    link.href = dataUrl;
+                    link.href = pngUrl;
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
-                })
-                .catch((err) => {
-                    console.error('Could not generate QR image', err);
-                    alert('Failed to download QR code. Please try again.');
-                });
+                };
+
+                img.onerror = () => {
+                    URL.revokeObjectURL(url);
+                    console.error('Failed to load SVG image');
+                    fallbackDownload(node);
+                };
+
+                img.src = url;
+            } else {
+                // Fallback to html-to-image
+                fallbackDownload(node);
+            }
+        } catch (error) {
+            console.error('QR download error:', error);
+            alert('Failed to download QR code. Please try again.');
         }
+    };
+
+    const fallbackDownload = (node) => {
+        toPng(node, { 
+            cacheBust: true,
+            pixelRatio: 2,
+            backgroundColor: '#ffffff',
+            width: 300,
+            height: 300
+        })
+            .then((dataUrl) => {
+                const link = document.createElement('a');
+                link.download = `${selectedBatch?.cropName || 'batch'}-qrcode.png`;
+                link.href = dataUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            })
+            .catch((err) => {
+                console.error('Fallback download error:', err);
+                alert('Failed to download QR code. Please take a screenshot instead.');
+            });
     };
 
     const handleCreateProduct = async (e) => {
@@ -1589,12 +1643,16 @@ export default function BatchTracking() {
                                 </div>
 
                                 <div className="bg-white p-4 rounded-xl mb-6 flex justify-center border border-stone-100" id="qr-code-node">
-                                    <QRCode 
-                                        value={`${typeof window !== 'undefined' ? window.location.origin : 'https://farmchain.com'}/verify/${selectedBatch.id}`}
-                                        level="H"
-                                        size={250}
-                                        style={{ height: "250px", width: "250px" }}
-                                    />
+                                    <div className="bg-white p-2">
+                                        <QRCode 
+                                            value={`${typeof window !== 'undefined' ? window.location.origin : 'https://farmchain.com'}/verify/${selectedBatch?.id}`}
+                                            level="H"
+                                            size={250}
+                                            includeMargin={true}
+                                            fgColor="#000000"
+                                            bgColor="#ffffff"
+                                        />
+                                    </div>
                                 </div>
 
                                 {/* URL Display */}
