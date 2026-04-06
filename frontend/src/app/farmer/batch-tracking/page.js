@@ -633,7 +633,7 @@ export default function BatchTracking() {
                                                     const timelineWarnings = analyzeTimeline(batch.activities || []);
                                                     return timelineWarnings.length > 0 ? (
                                                         <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-                                                            <p className="text-sm font-bold text-amber-900">⚠ Timeline Warnings</p>
+                                                            <p className="text-sm font-bold text-amber-900">⚠ Timeline Integrity Warnings</p>
                                                             <ul className="mt-2 space-y-1">
                                                                 {timelineWarnings.map((warning, warningIdx) => (
                                                                     <li key={`${batch.id}-${warning.type}-${warningIdx}`} className="text-xs text-amber-800">

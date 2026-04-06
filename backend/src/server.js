@@ -10,6 +10,7 @@ const businessController = require('./controllers/businessController');
 const mongoose = require('mongoose');
 const Batch = require('./models/batch');
 const blockchainService = require('./services/blockchainService');
+const predictionRoutes = require('./routes/prediction');
 
 const PORT = process.env.PORT || 4000;
 
@@ -38,6 +39,8 @@ const startServer = async () => {
         app.get('/health', (_, res) => {
             res.status(200).json({ ok: true });
         });
+
+        app.use('/api/predict', predictionRoutes);
 
         // Public verification endpoint (no auth): used by QR scan page
         app.get('/api/batch/:id', async (req, res) => {

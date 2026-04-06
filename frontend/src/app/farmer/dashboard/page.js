@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
@@ -11,6 +11,7 @@ import { graphqlRequest } from "@/lib/apollo-client";
 import { MY_FARMS_QUERY } from "@/lib/graphql/farm";
 import { LIST_BATCHES_SIMPLE_QUERY } from "@/lib/graphql/batch";
 import { MY_PRODUCTS_QUERY } from "@/lib/graphql/product";
+import { usePrediction } from "@/hooks/usePrediction";
 import {
   TrendingUp,
   Package,
@@ -32,6 +33,7 @@ export default function FarmerDashboard() {
   const [batches, setBatches] = useState([]);
   const [products, setProducts] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [predictionMode, setPredictionMode] = useState("adaptive");
 
   useEffect(() => {
     if (!user) return; // Wait for auth
@@ -167,6 +169,33 @@ export default function FarmerDashboard() {
     icon: index % 2 === 0 ? Package : CheckCircle2,
     color: index % 2 === 0 ? "bg-blue-500" : "bg-emerald-500",
   }));
+
+  const latestBatch = batches[0] || null;
+  const predictionInput = useMemo(() => ({
+    crop: latestBatch?.cropName || latestBatch?.cropCategory || "default",
+    location: latestBatch?.farmInfo?.pinCode || "",
+    activities: latestBatch?.activities || [],
+    timeline: latestBatch?.activities || [],
+    quantity: latestBatch?.quantity || latestBatch?.availableQty || "",
+    weather: latestBatch?.weather || null,
+    soil: latestBatch?.soilType || null,
+    history: (latestBatch?.activities?.length || 0) > 0 ? latestBatch.activities : null
+  }), [latestBatch]);
+
+  const prediction = usePrediction(predictionInput, predictionMode);
+
+  const modeBadgeLabel =
+    prediction.modeUsed === "ai"
+      ? "AI Mode"
+      : predictionMode === "adaptive"
+        ? "Adaptive Mode"
+        : "Cache Mode";
+
+  const modeOptions = [
+    { value: "ai", label: "AI" },
+    { value: "cache", label: "Cache" },
+    { value: "adaptive", label: "Adaptive" }
+  ];
 
   return (
     <FarmerLayout>
@@ -405,6 +434,60 @@ export default function FarmerDashboard() {
                   <p className="text-slate-400 text-sm">No recent activity</p>
                 </div>
               )}
+            </motion.div>
+
+            <motion.div
+              className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 md:p-8"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.5, duration: 0.5 }}
+            >
+              <div className="mb-4">
+                <div className="inline-flex bg-slate-100 rounded-xl p-1 gap-1">
+                  {modeOptions.map((mode) => (
+                    <button
+                      key={mode.value}
+                      onClick={() => setPredictionMode(mode.value)}
+                      className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${
+                        predictionMode === mode.value
+                          ? "bg-emerald-600 text-white"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      {mode.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="font-bold text-slate-900 text-lg">📈 Prediction Insights</h3>
+                <span className="px-2.5 py-1 text-[11px] font-bold rounded-full bg-emerald-100 text-emerald-700">
+                  {modeBadgeLabel}
+                </span>
+              </div>
+
+              <div className="space-y-4">
+                <div className="rounded-xl border border-slate-100 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Expected Yield</p>
+                  <p className="text-xl font-bold text-slate-900 mt-1">{prediction.yield}</p>
+                </div>
+
+                <div className="rounded-xl border border-slate-100 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Demand Forecast</p>
+                  <p className="text-xl font-bold text-slate-900 mt-1">{prediction.demand}</p>
+                </div>
+
+                <div className="rounded-xl border border-slate-100 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Price Suggestion</p>
+                  <p className="text-sm text-slate-700 mt-1">
+                    Sell now: <span className="font-bold text-slate-900">{prediction.price?.sellNow}</span>
+                  </p>
+                  <p className="text-sm text-slate-700 mt-1">
+                    Wait: <span className="font-bold text-emerald-700">{prediction.price?.wait}</span>
+                  </p>
+                </div>
+              </div>
             </motion.div>
 
             <motion.div
