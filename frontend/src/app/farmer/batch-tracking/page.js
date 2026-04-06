@@ -427,15 +427,23 @@ export default function BatchTracking() {
     const handleDownloadQR = () => {
         const node = document.getElementById('qr-code-node');
         if (node) {
-            toPng(node)
+            toPng(node, { 
+                cacheBust: true,
+                pixelRatio: 2,
+                width: 300,
+                height: 300
+            })
                 .then((dataUrl) => {
                     const link = document.createElement('a');
                     link.download = `${selectedBatch?.cropName || 'batch'}-qrcode.png`;
                     link.href = dataUrl;
+                    document.body.appendChild(link);
                     link.click();
+                    document.body.removeChild(link);
                 })
                 .catch((err) => {
                     console.error('Could not generate QR image', err);
+                    alert('Failed to download QR code. Please try again.');
                 });
         }
     };
@@ -1584,9 +1592,8 @@ export default function BatchTracking() {
                                     <QRCode 
                                         value={`${typeof window !== 'undefined' ? window.location.origin : 'https://farmchain.com'}/verify/${selectedBatch.id}`}
                                         level="H"
-                                        size={200}
-                                        style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                                        viewBox={`0 0 256 256`}
+                                        size={250}
+                                        style={{ height: "250px", width: "250px" }}
                                     />
                                 </div>
 
