@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ToastProvider } from "@/components/ui/Toast";
 import I18nProvider from "@/components/common/I18nProvider";
+import ZapierChatbot from "@/components/common/ZapierChatbot";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -34,7 +35,10 @@ export default function RootLayout({ children }) {
       <body className="antialiased font-sans">
         <I18nProvider>
           <AuthProvider>
-            <ToastProvider>{children}</ToastProvider>
+            <ToastProvider>
+              {children}
+              <ZapierChatbot />
+            </ToastProvider>
           </AuthProvider>
         </I18nProvider>
       </body>
